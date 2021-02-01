@@ -143,6 +143,7 @@ int push(my_stack* _stack, T val)
             _stack->cur_point += i;
             _stack->push_count++;
             _stack->_hash = my_hash(_stack);
+
              return 0;
 
         } else
@@ -184,6 +185,11 @@ unsigned char* pop(my_stack* _stack)
     unsigned char* tmp = (unsigned char*) calloc(_stack->size_of_elem + 1, sizeof(unsigned char));
     int i = 0, j = 0;
 
+    if (tmp == NULL)
+    {
+        return NULL;
+    }
+
     if (silent_ok(_stack) == 0)
     {
         if (_stack->cur_point >= _stack->size_of_elem)
@@ -208,12 +214,16 @@ unsigned char* pop(my_stack* _stack)
             tmp = NULL;
         }
         _stack->_hash = my_hash(_stack);
+
         return tmp;
 
     } else
     {
         _stack->errors++;
-        return tmp;
+        _stack->_hash = my_hash(_stack);
+        free(tmp);
+
+        return NULL;
     }
 }
 
@@ -382,6 +392,7 @@ int stack_recovery(my_stack* _stack)
             }
         }
     }
+    _stack->_hash = my_hash(_stack);
 
     return err_count;
 }
@@ -421,10 +432,11 @@ int dump(my_stack* _stack, void (*type_print)(unsigned char*) )
 
     printf("Stack[%x] condition:\n", _stack);
 
-    switch (silent_ok(_stack))
+    switch ( silent_ok(_stack) )
     {
     case 0:
         printf("Probably, stack is ok\n");
+        break;
 
     case 1:
         printf("The stack pointer is NULL\n");
@@ -432,9 +444,11 @@ int dump(my_stack* _stack, void (*type_print)(unsigned char*) )
 
     case 2:
         printf("Some of bytes have been recovered\n");
+        break;
 
     case 3:
         printf("Some of bytes have been fatally damaged\n");
+        break;
 
     default:
         if (silent_ok(_stack) < 0)
@@ -458,19 +472,20 @@ int dump(my_stack* _stack, void (*type_print)(unsigned char*) )
     printf("Points to arrays:\n");
     for (i = 0; i < _stack->array_count; i++)
     {
-        printf("    -array_of_array[%i] = |%x|\n", i, _stack->array_[i]);
+        printf("   -array_of_array[%i] = |%x|\n", i, _stack->array_[i]);
     }
 
+    printf("Data:\n");
     for (i = 0; i < (_stack->size_of_stack); i++)
     {
         if (i < (_stack->cur_point / _stack->size_of_elem) )
         {
-            printf("  ");
+            printf("   ");
             type_print(&_stack->array_[0][i * _stack->size_of_elem]);
             printf("\n");
         } else
         {
-            printf("  ");
+            printf("   ");
             type_print(&_stack->array_[0][i * _stack->size_of_elem]);
             printf(" ( should be poison '0' )\n");
         }

@@ -30,10 +30,20 @@ void stack_destruct(my_stack*);
 
 #include "functions.h"
 
+void print_double(unsigned char* elem)
+{
+    printf("%lf", *( (double*) elem ));
+}
+
 int main()
 {
     my_stack* test = stack_create(10, sizeof(double), 4);
-    push(test, 1.23);
-    push(test, 3.14);
+    if (test == NULL)
+    {
+        printf("dafuq\n");
+    }
+    printf("push = %i\n", push(test, 1.23));
+    printf("push = %i\n", push(test, 3.14));
 
+    dump(test, &print_double);
 }
